@@ -4,7 +4,7 @@
     "admin": {
       "root": "apps/admin",
       "framework": "nextjs",
-      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile --prod=false",
       "buildCommand": "cd ../.. && pnpm --filter @pharma/shared-types build && pnpm --filter @pharma/validation build && pnpm --filter @pharma/api-client build && pnpm --filter @pharma/admin build",
       "bindings": [
         {
@@ -19,7 +19,7 @@
       "root": "apps/api",
       "framework": "express",
       "entrypoint": "src/index.ts",
-      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile --prod=false",
       "buildCommand": "cd ../.. && pnpm --filter @pharma/shared-types build && pnpm --filter @pharma/validation build && pnpm --filter @pharma/api prisma:generate",
       "functions": {
         "src/index.ts": {
