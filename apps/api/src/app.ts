@@ -22,6 +22,9 @@ import { sendSuccess } from "./lib/response.js";
 export function createApp() {
   const app = express();
 
+  // Vercel / reverse proxies set X-Forwarded-*; required for express-rate-limit.
+  app.set("trust proxy", 1);
+
   app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
   app.use(
     cors({

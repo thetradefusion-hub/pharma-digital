@@ -58,6 +58,7 @@ export default function LoginPage() {
               height={48}
               className="h-12 w-12 rounded-xl object-cover"
               priority
+              unoptimized
             />
             <div>
               <p className="text-lg font-extrabold tracking-tight text-brand">
