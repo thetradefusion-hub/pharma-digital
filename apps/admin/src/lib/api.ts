@@ -6,6 +6,26 @@ import type { AuthTokens } from "@pharma/shared-types";
 const ACCESS_KEY = "pharma_admin_access";
 const REFRESH_KEY = "pharma_admin_refresh";
 
+/**
+ * Public browser traffic uses same-origin `/api` (Vercel rewrite → `api` service).
+ * Server-side code can use the `API_URL` service binding (runtime only; not build/middleware).
+ */
+export function resolveApiBaseUrl(): string {
+  const publicUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+  if (publicUrl) return publicUrl;
+
+  if (typeof window === "undefined" && process.env.API_URL) {
+    const base = process.env.API_URL.endsWith("/")
+      ? process.env.API_URL
+      : `${process.env.API_URL}/`;
+    return new URL("api", base).toString().replace(/\/$/, "");
+  }
+
+  if (typeof window !== "undefined") return "/api";
+
+  return "http://localhost:4000/api";
+}
+
 export function getStoredTokens(): AuthTokens | null {
   if (typeof window === "undefined") return null;
   const accessToken = localStorage.getItem(ACCESS_KEY);
@@ -26,7 +46,7 @@ export function setStoredTokens(tokens: AuthTokens | null) {
 }
 
 export const api = createApiClient({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api",
+  baseUrl: resolveApiBaseUrl(),
   getAccessToken: async () => getStoredTokens()?.accessToken ?? null,
   getRefreshToken: async () => getStoredTokens()?.refreshToken ?? null,
   setTokens: async (tokens) => setStoredTokens(tokens),

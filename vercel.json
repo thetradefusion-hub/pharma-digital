@@ -1,0 +1,52 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "admin": {
+      "root": "apps/admin",
+      "framework": "nextjs",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @pharma/shared-types build && pnpm --filter @pharma/validation build && pnpm --filter @pharma/api-client build && pnpm --filter @pharma/admin build",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "api",
+          "format": "url",
+          "env": "API_URL"
+        }
+      ]
+    },
+    "api": {
+      "root": "apps/api",
+      "framework": "express",
+      "entrypoint": "src/index.ts",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @pharma/shared-types build && pnpm --filter @pharma/validation build && pnpm --filter @pharma/api prisma:generate",
+      "functions": {
+        "src/index.ts": {
+          "includeFiles": "prisma/**",
+          "maxDuration": 60
+        }
+      }
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "api"
+      }
+    },
+    {
+      "source": "/health",
+      "destination": {
+        "service": "api"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "admin"
+      }
+    }
+  ]
+}

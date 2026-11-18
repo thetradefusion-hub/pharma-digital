@@ -18,7 +18,7 @@ export default function SettingsPage() {
           </p>
           <p>
             <strong>Admin API:</strong>{" "}
-            {process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api"}
+            {process.env.NEXT_PUBLIC_API_URL ?? "/api (same-origin)"}
           </p>
           <p>
             <strong>Theme:</strong> Light · Deep Blue (#0B3A6E) · Teal accent
