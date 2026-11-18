@@ -1,0 +1,32 @@
+{
+  "name": "pharma-digital-catalogue",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pharma Digital Catalogue & Interactive Visual Aid — monorepo",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter @pharma/api dev",
+    "dev:admin": "pnpm --filter @pharma/admin dev",
+    "dev:mobile": "pnpm --filter @pharma/mobile start",
+    "build": "pnpm -r --filter './packages/*' build && pnpm --filter @pharma/api build && pnpm --filter @pharma/admin build",
+    "build:packages": "pnpm -r --filter './packages/*' build",
+    "test": "pnpm -r --filter './apps/*' --filter './packages/*' test --if-present",
+    "lint": "pnpm -r --filter './apps/*' --filter './packages/*' lint --if-present",
+    "typecheck": "pnpm -r --filter './apps/*' --filter './packages/*' typecheck --if-present",
+    "db:migrate": "pnpm --filter @pharma/api prisma:migrate",
+    "db:seed": "pnpm --filter @pharma/api prisma:seed",
+    "db:generate": "pnpm --filter @pharma/api prisma:generate"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "18.3.12",
+      "@types/react-dom": "18.3.1"
+    }
+  }
+}

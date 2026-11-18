@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pharma-postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pharma}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pharma_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-pharma_catalogue}
+    volumes:
+      - pharma_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pharma} -d ${POSTGRES_DB:-pharma_catalogue}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: pharma-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-4000}:4000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pharma}:${POSTGRES_PASSWORD:-pharma_dev_password}@postgres:5432/${POSTGRES_DB:-pharma_catalogue}?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pharma_pg_data:

@@ -1,0 +1,303 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleName {
+  ADMIN
+  MOBILE_USER
+}
+
+enum PublicationStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum SlideType {
+  IMAGE
+  PRODUCT_INTRO
+  COMPOSITION
+  PRODUCT_INFO
+  BENEFITS
+  INFOGRAPHIC
+  CUSTOM
+  PRESCRIBING_INFO
+}
+
+enum ChangeType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+enum ActivityAction {
+  CREATED
+  UPDATED
+  DELETED
+  PUBLISHED
+  UNPUBLISHED
+  LOGIN
+  STATUS_CHANGED
+  PASSWORD_RESET
+}
+
+enum AssetType {
+  IMAGE
+  SLIDE_ASSET
+  OTHER
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        RoleName @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       User[]
+}
+
+model User {
+  id           String         @id @default(uuid()) @db.Uuid
+  email        String         @unique
+  username     String         @unique
+  passwordHash String
+  fullName     String
+  isActive     Boolean        @default(true)
+  lastLoginAt  DateTime?
+  roleId       String         @db.Uuid
+  role         Role           @relation(fields: [roleId], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+  refreshTokens RefreshToken[]
+  activityLogs AdminActivityLog[]
+  publishedCatalogues CatalogueVersion[] @relation("CataloguePublisher")
+
+  @@index([email])
+  @@index([username])
+  @@index([isActive])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model Category {
+  id            String        @id @default(uuid()) @db.Uuid
+  name          String
+  description   String?
+  imageUrl      String?
+  imageHash     String?
+  displayOrder  Int           @default(0)
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+  products      Product[]
+  subCategories SubCategory[]
+
+  @@index([name])
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+model SubCategory {
+  id           String    @id @default(uuid()) @db.Uuid
+  categoryId   String    @db.Uuid
+  category     Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  displayOrder Int       @default(0)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  products     Product[]
+
+  @@index([categoryId])
+  @@index([name])
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+model Product {
+  id                   String            @id @default(uuid()) @db.Uuid
+  name                 String
+  brandName            String
+  genericName          String?
+  sku                  String            @unique
+  categoryId           String            @db.Uuid
+  category             Category          @relation(fields: [categoryId], references: [id])
+  subCategoryId        String?           @db.Uuid
+  subCategory          SubCategory?      @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
+  composition          String?
+  strength             String?
+  dosageForm           String?
+  packSize             String?
+  description          String?
+  approvedIndications  String?
+  keyInformation       String?
+  highlights           String?
+  prescribingInfo      String?
+  precautions          String?
+  storageInstructions  String?
+  displayOrder         Int               @default(0)
+  status               PublicationStatus @default(DRAFT)
+  featured             Boolean           @default(false)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  deletedAt            DateTime?
+  images               ProductImage[]
+  presentation         Presentation?
+
+  @@index([name])
+  @@index([brandName])
+  @@index([sku])
+  @@index([status])
+  @@index([categoryId])
+  @@index([subCategoryId])
+  @@index([featured])
+  @@index([updatedAt])
+}
+
+model ProductImage {
+  id           String   @id @default(uuid()) @db.Uuid
+  productId    String   @db.Uuid
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url          String
+  publicId     String?
+  contentHash  String?
+  altText      String?
+  displayOrder Int      @default(0)
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([productId])
+  @@index([displayOrder])
+}
+
+model Presentation {
+  id          String            @id @default(uuid()) @db.Uuid
+  productId   String            @unique @db.Uuid
+  product     Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  title       String
+  status      PublicationStatus @default(DRAFT)
+  version     Int               @default(1)
+  publishedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deletedAt   DateTime?
+  slides      PresentationSlide[]
+
+  @@index([status])
+}
+
+model PresentationSlide {
+  id                   String       @id @default(uuid()) @db.Uuid
+  presentationId       String       @db.Uuid
+  presentation         Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  title                String
+  subtitle             String?
+  slideType            SlideType
+  backgroundColor      String?
+  backgroundImageUrl   String?
+  backgroundImageHash  String?
+  mainImageUrl         String?
+  mainImageHash        String?
+  secondaryImageUrl    String?
+  secondaryImageHash   String?
+  description          String?
+  bulletPoints         Json         @default("[]")
+  highlightText        String?
+  content              Json?
+  displayOrder         Int          @default(0)
+  isActive             Boolean      @default(true)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  deletedAt            DateTime?
+
+  @@index([presentationId])
+  @@index([displayOrder])
+  @@index([isActive])
+}
+
+model CatalogueVersion {
+  id            String           @id @default(uuid()) @db.Uuid
+  version       Int              @unique
+  label         String?
+  notes         String?
+  isPublished   Boolean          @default(false)
+  publishedAt   DateTime?
+  publishedById String?          @db.Uuid
+  publishedBy   User?            @relation("CataloguePublisher", fields: [publishedById], references: [id])
+  manifestHash  String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  changes       CatalogueChange[]
+
+  @@index([isPublished])
+  @@index([publishedAt])
+}
+
+model CatalogueChange {
+  id                 String           @id @default(uuid()) @db.Uuid
+  catalogueVersionId String           @db.Uuid
+  catalogueVersion   CatalogueVersion @relation(fields: [catalogueVersionId], references: [id], onDelete: Cascade)
+  entityType         String
+  entityId           String           @db.Uuid
+  changeType         ChangeType
+  summary            String
+  createdAt          DateTime         @default(now())
+
+  @@index([catalogueVersionId])
+  @@index([entityType, entityId])
+}
+
+model DownloadAsset {
+  id          String    @id @default(uuid()) @db.Uuid
+  entityType  String
+  entityId    String    @db.Uuid
+  assetType   AssetType
+  url         String
+  publicId    String?
+  contentHash String?
+  mimeType    String?
+  byteSize    Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([contentHash])
+}
+
+model AdminActivityLog {
+  id         String         @id @default(uuid()) @db.Uuid
+  userId     String         @db.Uuid
+  user       User           @relation(fields: [userId], references: [id])
+  action     ActivityAction
+  entityType String
+  entityId   String?        @db.Uuid
+  summary    String
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime       @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([entityType])
+}
