@@ -18,7 +18,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.example.com/api"
+        "EXPO_PUBLIC_API_URL": "https://pharma-digital.vercel.app/api"
       }
     },
     "production": {
@@ -26,7 +26,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.example.com/api"
+        "EXPO_PUBLIC_API_URL": "https://pharma-digital.vercel.app/api"
       }
     }
   },
